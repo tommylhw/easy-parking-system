@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -7,36 +8,36 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+} from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { EmptyState } from '@/src/components/EmptyState';
-import { FilterChips } from '@/src/components/FilterChips';
-import { LoadingState } from '@/src/components/LoadingState';
-import { MapCanvas } from '@/src/components/MapCanvas';
-import { ParkingCard } from '@/src/components/ParkingCard';
-import { RecentSearches } from '@/src/components/RecentSearches';
-import { SearchInput } from '@/src/components/SearchInput';
-import { SectionHeader } from '@/src/components/SectionHeader';
-import { StaleBanner } from '@/src/components/StaleBanner';
-import { useAppTheme } from '@/src/theme/theme-provider';
-import { ParkingItem } from '@/src/types/domain';
-import { formatTimestamp } from '@/src/utils/date';
-import { withDistance } from '@/src/utils/geo';
-import { requestCurrentLocation } from '@/src/utils/location';
-import { openInMaps } from '@/src/utils/navigation';
-import { fetchParkingBundle } from '@/src/utils/parkingData';
+import { EmptyState } from "@/src/components/EmptyState";
+import { FilterChips } from "@/src/components/FilterChips";
+import { LoadingState } from "@/src/components/LoadingState";
+import { MapCanvas } from "@/src/components/MapCanvas";
+import { ParkingCard } from "@/src/components/ParkingCard";
+import { RecentSearches } from "@/src/components/RecentSearches";
+import { SearchInput } from "@/src/components/SearchInput";
+import { SectionHeader } from "@/src/components/SectionHeader";
+import { StaleBanner } from "@/src/components/StaleBanner";
+import { useAppTheme } from "@/src/theme/theme-provider";
+import { ParkingItem } from "@/src/types/domain";
+import { formatTimestamp } from "@/src/utils/date";
+import { withDistance } from "@/src/utils/geo";
+import { requestCurrentLocation } from "@/src/utils/location";
+import { openInMaps } from "@/src/utils/navigation";
+import { fetchParkingBundle } from "@/src/utils/parkingData";
 import {
   addRecentSearch,
   listFavoriteIds,
   listRecentSearches,
   toggleFavorite,
-} from '@/src/utils/sqliteDB';
+} from "@/src/utils/sqliteDB";
 
-const SEARCH_FILTERS = ['All', 'Car Parks', 'Metered'];
+const SEARCH_FILTERS = ["All", "Car Parks", "Metered"];
 
 export default function ParkingScreen() {
-  const { palette } = useAppTheme();
+  const { isDark, palette } = useAppTheme();
 
   const [carparks, setCarparks] = useState<ParkingItem[]>([]);
   const [metered, setMetered] = useState<ParkingItem[]>([]);
@@ -45,17 +46,20 @@ export default function ParkingScreen() {
   const [stale, setStale] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
-  const [location, setLocation] = useState<{ latitude: number; longitude: number }>();
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>();
   const [locationDenied, setLocationDenied] = useState(false);
-  const [search, setSearch] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [search, setSearch] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("All");
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   const loadDbState = useCallback(async () => {
     const [favoriteSet, recent] = await Promise.all([
-      listFavoriteIds('parking'),
-      listRecentSearches('parking', 8),
+      listFavoriteIds("parking"),
+      listRecentSearches("parking", 8),
     ]);
 
     setFavoriteIds(favoriteSet);
@@ -71,6 +75,11 @@ export default function ParkingScreen() {
 
     setLocationDenied(false);
     setLocation(locResult.coordinates);
+    // console.log(
+    //   "Current location:",
+    //   locResult.coordinates!.latitude,
+    //   locResult.coordinates!.longitude,
+    // );
   }, []);
 
   const loadParkingData = useCallback(async () => {
@@ -82,7 +91,9 @@ export default function ParkingScreen() {
       setLastUpdated(response.updatedAt);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to fetch parking data');
+      setError(
+        err instanceof Error ? err.message : "Unable to fetch parking data",
+      );
     }
   }, []);
 
@@ -102,7 +113,7 @@ export default function ParkingScreen() {
         setIsLoading(false);
       }
     },
-    [loadDbState, loadLocation, loadParkingData]
+    [loadDbState, loadLocation, loadParkingData],
   );
 
   useEffect(() => {
@@ -117,12 +128,12 @@ export default function ParkingScreen() {
   const filteredItems = useMemo(() => {
     let items = merged;
 
-    if (selectedFilter === 'Car Parks') {
-      items = items.filter((item) => item.source === 'carpark');
+    if (selectedFilter === "Car Parks") {
+      items = items.filter((item) => item.source === "carpark");
     }
 
-    if (selectedFilter === 'Metered') {
-      items = items.filter((item) => item.source === 'metered');
+    if (selectedFilter === "Metered") {
+      items = items.filter((item) => item.source === "metered");
     }
 
     const keyword = search.trim().toLowerCase();
@@ -131,7 +142,8 @@ export default function ParkingScreen() {
     }
 
     return items.filter((item) => {
-      const haystack = `${item.name} ${item.address} ${item.district}`.toLowerCase();
+      const haystack =
+        `${item.name} ${item.address} ${item.district}`.toLowerCase();
       return haystack.includes(keyword);
     });
   }, [merged, search, selectedFilter]);
@@ -142,10 +154,11 @@ export default function ParkingScreen() {
         id: item.id,
         coordinate: item.coordinates,
         title: item.name,
-        subtitle: `${item.source === 'carpark' ? 'Car park' : 'Metered'} · Vacancy ${item.vacancy ?? 'N/A'}`,
-        color: item.source === 'carpark' ? palette.mapCarpark : palette.mapMetered,
+        subtitle: `${item.source === "carpark" ? "Car park" : "Metered"} · Vacancy ${item.vacancy ?? "N/A"}`,
+        color:
+          item.source === "carpark" ? palette.mapCarpark : palette.mapMetered,
       })),
-    [filteredItems, palette.mapCarpark, palette.mapMetered]
+    [filteredItems, palette.mapCarpark, palette.mapMetered],
   );
 
   const handleSubmitSearch = useCallback(async () => {
@@ -153,8 +166,8 @@ export default function ParkingScreen() {
       return;
     }
 
-    await addRecentSearch('parking', search);
-    setRecentSearches(await listRecentSearches('parking', 8));
+    await addRecentSearch("parking", search);
+    setRecentSearches(await listRecentSearches("parking", 8));
   }, [search]);
 
   const handleSelectRecent = useCallback((value: string) => {
@@ -164,7 +177,7 @@ export default function ParkingScreen() {
   const handleToggleFavorite = useCallback(async (item: ParkingItem) => {
     const isSaved = await toggleFavorite({
       itemId: item.id,
-      itemType: 'parking',
+      itemType: "parking",
       name: item.name,
       latitude: item.coordinates.latitude,
       longitude: item.coordinates.longitude,
@@ -183,7 +196,10 @@ export default function ParkingScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: palette.background }]}
+    >
+      <StatusBar style={isDark ? "light" : "dark"} />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -194,7 +210,8 @@ export default function ParkingScreen() {
             }}
             tintColor={palette.primary}
           />
-        }>
+        }
+      >
         <SectionHeader
           title="Nearby Parking"
           subtitle="Hong Kong car parks and metered spaces with live availability where available."
@@ -207,9 +224,18 @@ export default function ParkingScreen() {
           onSubmit={handleSubmitSearch}
         />
 
-        {!search ? <RecentSearches searches={recentSearches} onPress={handleSelectRecent} /> : null}
+        {!search ? (
+          <RecentSearches
+            searches={recentSearches}
+            onPress={handleSelectRecent}
+          />
+        ) : null}
 
-        <FilterChips options={SEARCH_FILTERS} selected={selectedFilter} onSelect={setSelectedFilter} />
+        <FilterChips
+          options={SEARCH_FILTERS}
+          selected={selectedFilter}
+          onSelect={setSelectedFilter}
+        />
 
         {stale ? <StaleBanner /> : null}
 
@@ -220,9 +246,13 @@ export default function ParkingScreen() {
         <MapCanvas center={location} markers={mapMarkers} />
 
         <View style={styles.sectionRow}>
-          <Text style={[styles.sectionTitle, { color: palette.text }]}>Results ({filteredItems.length})</Text>
+          <Text style={[styles.sectionTitle, { color: palette.text }]}>
+            Results ({filteredItems.length})
+          </Text>
           {lastUpdated ? (
-            <Text style={[styles.sectionMeta, { color: palette.subtext }]}>Updated {formatTimestamp(lastUpdated)}</Text>
+            <Text style={[styles.sectionMeta, { color: palette.subtext }]}>
+              Updated {formatTimestamp(lastUpdated)}
+            </Text>
           ) : null}
         </View>
 
@@ -233,12 +263,18 @@ export default function ParkingScreen() {
         ) : null}
 
         {!isLoading && !error && filteredItems.length === 0 ? (
-          <EmptyState title="No parking spots matched" subtitle="Try a broader district or clear the filters." />
+          <EmptyState
+            title="No parking spots matched"
+            subtitle="Try a broader district or clear the filters."
+          />
         ) : null}
 
         {!isLoading && !error
           ? filteredItems.slice(0, 35).map((item, index) => (
-              <Animated.View key={item.id} entering={FadeInDown.delay(index * 40).duration(280)}>
+              <Animated.View
+                key={item.id}
+                entering={FadeInDown.delay(index * 40).duration(280)}
+              >
                 <ParkingCard
                   item={item}
                   favorite={favoriteIds.has(item.id)}
@@ -246,7 +282,11 @@ export default function ParkingScreen() {
                     void handleToggleFavorite(item);
                   }}
                   onNavigate={() => {
-                    void openInMaps(item.coordinates.latitude, item.coordinates.longitude, item.name);
+                    void openInMaps(
+                      item.coordinates.latitude,
+                      item.coordinates.longitude,
+                      item.name,
+                    );
                   }}
                 />
               </Animated.View>
@@ -257,10 +297,16 @@ export default function ParkingScreen() {
           onPress={() => {
             void reloadAll(true);
           }}
-          style={[styles.reloadButton, { borderColor: palette.border, backgroundColor: palette.card }]}
+          style={[
+            styles.reloadButton,
+            { borderColor: palette.border, backgroundColor: palette.card },
+          ]}
           accessibilityRole="button"
-          accessibilityLabel="Refresh parking data">
-          <Text style={[styles.reloadText, { color: palette.text }]}>Refresh Data</Text>
+          accessibilityLabel="Refresh parking data"
+        >
+          <Text style={[styles.reloadText, { color: palette.text }]}>
+            Refresh Data
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -279,27 +325,27 @@ const styles = StyleSheet.create({
   },
   sectionRow: {
     marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   sectionMeta: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   reloadButton: {
     borderWidth: 1,
     borderRadius: 14,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   reloadText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

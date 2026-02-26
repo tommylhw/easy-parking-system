@@ -1,21 +1,29 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { EmptyState } from '@/src/components/EmptyState';
-import { GlassCard } from '@/src/components/GlassCard';
-import { SectionHeader } from '@/src/components/SectionHeader';
-import { useAppTheme } from '@/src/theme/theme-provider';
-import { FavoriteRecord } from '@/src/types/domain';
-import { openInMaps } from '@/src/utils/navigation';
+import { EmptyState } from "@/src/components/EmptyState";
+import { GlassCard } from "@/src/components/GlassCard";
+import { SectionHeader } from "@/src/components/SectionHeader";
+import { useAppTheme } from "@/src/theme/theme-provider";
+import { FavoriteRecord } from "@/src/types/domain";
+import { openInMaps } from "@/src/utils/navigation";
 import {
   clearRecentSearches,
   listFavorites,
   listRecentSearches,
   removeFavorite,
-} from '@/src/utils/sqliteDB';
+} from "@/src/utils/sqliteDB";
 
 export default function SavedScreen() {
-  const { palette } = useAppTheme();
+  const { isDark, palette } = useAppTheme();
 
   const [favorites, setFavorites] = useState<FavoriteRecord[]>([]);
   const [parkingHistory, setParkingHistory] = useState<string[]>([]);
@@ -24,8 +32,8 @@ export default function SavedScreen() {
   const loadData = useCallback(async () => {
     const [allFavorites, parking, stations] = await Promise.all([
       listFavorites(),
-      listRecentSearches('parking', 12),
-      listRecentSearches('station', 12),
+      listRecentSearches("parking", 12),
+      listRecentSearches("station", 12),
     ]);
 
     setFavorites(allFavorites);
@@ -38,43 +46,74 @@ export default function SavedScreen() {
   }, [loadData]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: palette.background }]}
+    >
+      <StatusBar style={isDark ? "light" : "dark"} />
       <ScrollView contentContainerStyle={styles.content}>
-        <SectionHeader title="Saved" subtitle="Favorites and recent searches stored on-device with SQLite." />
+        <SectionHeader
+          title="Saved"
+          subtitle="Favorites and recent searches stored on-device with SQLite."
+        />
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.text }]}>Favorites ({favorites.length})</Text>
+          <Text style={[styles.sectionTitle, { color: palette.text }]}>
+            Favorites ({favorites.length})
+          </Text>
           {favorites.length === 0 ? (
-            <EmptyState title="No favorites yet" subtitle="Save parking spots or stations to see them here." />
+            <EmptyState
+              title="No favorites yet"
+              subtitle="Save parking spots or stations to see them here."
+            />
           ) : (
             favorites.map((favorite) => (
               <GlassCard key={`${favorite.itemType}-${favorite.itemId}`}>
-                <Text style={[styles.favoriteTitle, { color: palette.text }]} numberOfLines={2}>
+                <Text
+                  style={[styles.favoriteTitle, { color: palette.text }]}
+                  numberOfLines={2}
+                >
                   {favorite.name}
                 </Text>
                 <Text style={[styles.favoriteType, { color: palette.subtext }]}>
-                  {favorite.itemType === 'parking' ? 'Parking' : 'Filling Station'}
+                  {favorite.itemType === "parking"
+                    ? "Parking"
+                    : "Filling Station"}
                 </Text>
                 <View style={styles.favoriteActions}>
                   <Pressable
                     onPress={() => {
-                      void openInMaps(favorite.latitude, favorite.longitude, favorite.name);
+                      void openInMaps(
+                        favorite.latitude,
+                        favorite.longitude,
+                        favorite.name,
+                      );
                     }}
-                    style={[styles.smallButton, { backgroundColor: palette.primary }]}
+                    style={[
+                      styles.smallButton,
+                      { backgroundColor: palette.primary },
+                    ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`Navigate to ${favorite.name}`}>
+                    accessibilityLabel={`Navigate to ${favorite.name}`}
+                  >
                     <Text style={styles.smallButtonText}>Navigate</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => {
                       void (async () => {
-                        await removeFavorite(favorite.itemId, favorite.itemType);
+                        await removeFavorite(
+                          favorite.itemId,
+                          favorite.itemType,
+                        );
                         await loadData();
                       })();
                     }}
-                    style={[styles.smallButton, { backgroundColor: palette.danger }]}
+                    style={[
+                      styles.smallButton,
+                      { backgroundColor: palette.danger },
+                    ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`Remove ${favorite.name} from favorites`}>
+                    accessibilityLabel={`Remove ${favorite.name} from favorites`}
+                  >
                     <Text style={styles.smallButtonText}>Remove</Text>
                   </Pressable>
                 </View>
@@ -84,13 +123,18 @@ export default function SavedScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.text }]}>Recent Parking Searches</Text>
+          <Text style={[styles.sectionTitle, { color: palette.text }]}>
+            Recent Parking Searches
+          </Text>
           {parkingHistory.length === 0 ? (
             <EmptyState title="No parking history" />
           ) : (
             <GlassCard>
               {parkingHistory.map((item) => (
-                <Text key={item} style={[styles.historyItem, { color: palette.text }]}> 
+                <Text
+                  key={item}
+                  style={[styles.historyItem, { color: palette.text }]}
+                >
                   • {item}
                 </Text>
               ))}
@@ -99,13 +143,18 @@ export default function SavedScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: palette.text }]}>Recent Station Searches</Text>
+          <Text style={[styles.sectionTitle, { color: palette.text }]}>
+            Recent Station Searches
+          </Text>
           {stationHistory.length === 0 ? (
             <EmptyState title="No station history" />
           ) : (
             <GlassCard>
               {stationHistory.map((item) => (
-                <Text key={item} style={[styles.historyItem, { color: palette.text }]}> 
+                <Text
+                  key={item}
+                  style={[styles.historyItem, { color: palette.text }]}
+                >
                   • {item}
                 </Text>
               ))}
@@ -120,10 +169,16 @@ export default function SavedScreen() {
               await loadData();
             })();
           }}
-          style={[styles.clearButton, { borderColor: palette.border, backgroundColor: palette.card }]}
+          style={[
+            styles.clearButton,
+            { borderColor: palette.border, backgroundColor: palette.card },
+          ]}
           accessibilityRole="button"
-          accessibilityLabel="Clear all recent search history">
-          <Text style={[styles.clearButtonText, { color: palette.text }]}>Clear Search History</Text>
+          accessibilityLabel="Clear all recent search history"
+        >
+          <Text style={[styles.clearButtonText, { color: palette.text }]}>
+            Clear Search History
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -145,19 +200,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   favoriteTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   favoriteType: {
     marginTop: 4,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   favoriteActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     marginTop: 12,
   },
@@ -167,9 +222,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   smallButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   historyItem: {
     fontSize: 14,
@@ -180,10 +235,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   clearButtonText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

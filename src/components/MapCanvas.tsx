@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import MapView, { Callout, Marker, Region } from 'react-native-maps';
+import { useMemo } from "react";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import MapView, { Callout, Marker, Region } from "react-native-maps";
 
-import { useAppTheme } from '@/src/theme/theme-provider';
-import { Coordinates } from '@/src/types/domain';
+import { useAppTheme } from "@/src/theme/theme-provider";
+import { Coordinates } from "@/src/types/domain";
 
 type MarkerItem = {
   id: string;
@@ -38,7 +38,7 @@ export function MapCanvas({ center, markers, height = 280 }: Props) {
   }, [center]);
 
   return (
-    <View style={[styles.wrapper, { borderColor: palette.border, height }]}> 
+    <View style={[styles.wrapper, { borderColor: palette.border, height }]}>
       <MapView
         style={StyleSheet.absoluteFillObject}
         initialRegion={region}
@@ -46,18 +46,22 @@ export function MapCanvas({ center, markers, height = 280 }: Props) {
         showsCompass
         showsScale
         loadingEnabled
-        mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}>
+        mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"}
+      >
         {markers.map((marker) => (
           <Marker
             key={marker.id}
             coordinate={marker.coordinate}
             pinColor={marker.color}
             title={marker.title}
-            description={marker.subtitle}>
+            description={marker.subtitle}
+          >
             <Callout tooltip={false}>
               <View style={styles.callout}>
                 <Text style={styles.calloutTitle}>{marker.title}</Text>
-                {marker.subtitle ? <Text style={styles.calloutSubtitle}>{marker.subtitle}</Text> : null}
+                {marker.subtitle ? (
+                  <Text style={styles.calloutSubtitle}>{marker.subtitle}</Text>
+                ) : null}
               </View>
             </Callout>
           </Marker>
@@ -70,7 +74,7 @@ export function MapCanvas({ center, markers, height = 280 }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
   },
   callout: {
@@ -79,11 +83,11 @@ const styles = StyleSheet.create({
   },
   calloutTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 2,
   },
   calloutSubtitle: {
     fontSize: 12,
-    color: '#404043',
+    color: "#404043",
   },
 });

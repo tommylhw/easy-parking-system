@@ -1,19 +1,30 @@
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import {
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { EmptyState } from '@/src/components/EmptyState';
-import { GlassCard } from '@/src/components/GlassCard';
-import { SectionHeader } from '@/src/components/SectionHeader';
-import { ThemeMode } from '@/src/theme/tokens';
-import { useAppTheme } from '@/src/theme/theme-provider';
-import { clearApiCache } from '@/src/utils/cache';
+import { EmptyState } from "@/src/components/EmptyState";
+import { GlassCard } from "@/src/components/GlassCard";
+import { SectionHeader } from "@/src/components/SectionHeader";
+import { useAppTheme } from "@/src/theme/theme-provider";
+import { ThemeMode } from "@/src/theme/tokens";
+import { clearApiCache } from "@/src/utils/cache";
 
-const THEME_OPTIONS: ThemeMode[] = ['system', 'light', 'dark'];
+const THEME_OPTIONS: ThemeMode[] = ["system", "light", "dark"];
 
 export default function SettingsScreen() {
-  const { mode, setMode, palette, resolvedScheme } = useAppTheme();
+  const { isDark, mode, setMode, palette, resolvedScheme } = useAppTheme();
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.background }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: palette.background }]}
+    >
+      <StatusBar style={isDark ? "light" : "dark"} />
       <ScrollView contentContainerStyle={styles.content}>
         <SectionHeader
           title="Settings"
@@ -21,8 +32,12 @@ export default function SettingsScreen() {
         />
 
         <GlassCard>
-          <Text style={[styles.blockTitle, { color: palette.text }]}>Appearance</Text>
-          <Text style={[styles.description, { color: palette.subtext }]}>Current mode: {resolvedScheme}</Text>
+          <Text style={[styles.blockTitle, { color: palette.text }]}>
+            Appearance
+          </Text>
+          <Text style={[styles.description, { color: palette.subtext }]}>
+            Current mode: {resolvedScheme}
+          </Text>
 
           <View style={styles.row}>
             {THEME_OPTIONS.map((option) => {
@@ -37,13 +52,21 @@ export default function SettingsScreen() {
                   style={[
                     styles.optionButton,
                     {
-                      backgroundColor: selected ? palette.primary : palette.cardSecondary,
+                      backgroundColor: selected
+                        ? palette.primary
+                        : palette.cardSecondary,
                       borderColor: selected ? palette.primary : palette.border,
                     },
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel={`Switch theme to ${option}`}>
-                  <Text style={[styles.optionText, { color: selected ? '#fff' : palette.text }]}>
+                  accessibilityLabel={`Switch theme to ${option}`}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      { color: selected ? "#fff" : palette.text },
+                    ]}
+                  >
                     {option.toUpperCase()}
                   </Text>
                 </Pressable>
@@ -53,16 +76,24 @@ export default function SettingsScreen() {
         </GlassCard>
 
         <GlassCard>
-          <Text style={[styles.blockTitle, { color: palette.text }]}>Data & Cache</Text>
-          <Text style={[styles.description, { color: palette.subtext }]}>Clear cached API payloads.</Text>
+          <Text style={[styles.blockTitle, { color: palette.text }]}>
+            Data & Cache
+          </Text>
+          <Text style={[styles.description, { color: palette.subtext }]}>
+            Clear cached API payloads.
+          </Text>
 
           <Pressable
             onPress={() => {
               void clearApiCache();
             }}
-            style={[styles.actionButton, { backgroundColor: palette.secondary }]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: palette.secondary },
+            ]}
             accessibilityRole="button"
-            accessibilityLabel="Clear API cache">
+            accessibilityLabel="Clear API cache"
+          >
             <Text style={styles.actionText}>Clear API Cache</Text>
           </Pressable>
         </GlassCard>
@@ -88,7 +119,7 @@ const styles = StyleSheet.create({
   },
   blockTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   description: {
     fontSize: 14,
@@ -96,7 +127,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     marginTop: 12,
   },
@@ -108,17 +139,17 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   actionButton: {
     marginTop: 12,
     borderRadius: 12,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   actionText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

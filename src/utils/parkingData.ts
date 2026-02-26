@@ -1,16 +1,18 @@
-import { fetchWithCache } from '@/src/utils/cache';
-import { parseCsv } from '@/src/utils/csv';
-import { fetchJson, fetchText } from '@/src/utils/http';
-import { ParkingItem } from '@/src/types/domain';
+import { ParkingItem } from "@/src/types/domain";
+import { fetchWithCache } from "@/src/utils/cache";
+import { parseCsv } from "@/src/utils/csv";
+import { fetchJson, fetchText } from "@/src/utils/http";
 
 const CACHE_MAX_AGE_MS = 3 * 60 * 1000;
 
-const CARPARK_INFO_URL = 'https://api.data.gov.hk/v1/carpark-info-vacancy?data=info';
-const CARPARK_VACANCY_URL = 'https://api.data.gov.hk/v1/carpark-info-vacancy?data=vacancy';
+const CARPARK_INFO_URL =
+  "https://api.data.gov.hk/v1/carpark-info-vacancy?data=info&lang=zh_TW";
+const CARPARK_VACANCY_URL =
+  "https://api.data.gov.hk/v1/carpark-info-vacancy?data=vacancy";
 const METERED_SPACES_CSV_URL =
-  'https://resource.data.one.gov.hk/td/psiparkingspaces/spaceinfo/parkingspaces.csv';
+  "https://resource.data.one.gov.hk/td/psiparkingspaces/spaceinfo/parkingspaces.csv";
 const METERED_OCCUPANCY_CSV_URL =
-  'https://resource.data.one.gov.hk/td/psiparkingspaces/occupancystatus/occupancystatus.csv';
+  "https://resource.data.one.gov.hk/td/psiparkingspaces/occupancystatus/occupancystatus.csv";
 
 type CarparkInfoApiResponse = {
   results: {
@@ -24,8 +26,17 @@ type CarparkInfoApiResponse = {
     openingHours?: { periodStart?: string; periodEnd?: string }[];
     privateCar?: {
       space?: number;
-      hourlyCharges?: { price?: number; periodStart?: string; periodEnd?: string }[];
-      dayNightParks?: { price?: number; periodStart?: string; periodEnd?: string; type?: string }[];
+      hourlyCharges?: {
+        price?: number;
+        periodStart?: string;
+        periodEnd?: string;
+      }[];
+      dayNightParks?: {
+        price?: number;
+        periodStart?: string;
+        periodEnd?: string;
+        type?: string;
+      }[];
     };
   }[];
 };
@@ -41,7 +52,9 @@ type CarparkVacancyApiResponse = {
   }[];
 };
 
-function formatCarparkRate(privateCar?: CarparkInfoApiResponse['results'][number]['privateCar']) {
+function formatCarparkRate(
+  privateCar?: CarparkInfoApiResponse["results"][number]["privateCar"],
+) {
   if (!privateCar) {
     return undefined;
   }
@@ -54,7 +67,7 @@ function formatCarparkRate(privateCar?: CarparkInfoApiResponse['results'][number
   }
 
   if (dayNight?.price) {
-    const label = dayNight.type === 'night-park' ? 'night' : 'day';
+    const label = dayNight.type === "night-park" ? "night" : "day";
     return `HK$${dayNight.price}/${label}`;
   }
 
@@ -62,8 +75,8 @@ function formatCarparkRate(privateCar?: CarparkInfoApiResponse['results'][number
 }
 
 function formatOpeningHours(
-  openingHours?: CarparkInfoApiResponse['results'][number]['openingHours'],
-  openingStatus?: string
+  openingHours?: CarparkInfoApiResponse["results"][number]["openingHours"],
+  openingStatus?: string,
 ) {
   const first = openingHours?.[0];
   if (first?.periodStart && first?.periodEnd) {
@@ -79,10 +92,15 @@ async function fetchCarparksNetwork(): Promise<ParkingItem[]> {
     fetchJson<CarparkVacancyApiResponse>(CARPARK_VACANCY_URL),
   ]);
 
-  const vacancyMap = new Map<string, { vacancy?: number; lastupdate?: string }>();
+  const vacancyMap = new Map<
+    string,
+    { vacancy?: number; lastupdate?: string }
+  >();
 
   for (const item of vacancy.results) {
-    const match = item.privateCar?.find((slot) => slot.vacancy_type === 'A') ?? item.privateCar?.[0];
+    const match =
+      item.privateCar?.find((slot) => slot.vacancy_type === "A") ??
+      item.privateCar?.[0];
     vacancyMap.set(item.park_Id, {
       vacancy: match?.vacancy,
       lastupdate: match?.lastupdate,
@@ -90,15 +108,18 @@ async function fetchCarparksNetwork(): Promise<ParkingItem[]> {
   }
 
   return info.results
-    .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+    .filter(
+      (item) =>
+        Number.isFinite(item.latitude) && Number.isFinite(item.longitude),
+    )
     .map((item) => {
       const vacancyInfo = vacancyMap.get(item.park_Id);
       return {
         id: `carpark-${item.park_Id}`,
-        source: 'carpark' as const,
+        source: "carpark" as const,
         name: item.name,
-        district: item.district || 'Unknown',
-        address: item.displayAddress || 'Address unavailable',
+        district: item.district || "Unknown",
+        address: item.displayAddress || "Address unavailable",
         coordinates: {
           latitude: Number(item.latitude),
           longitude: Number(item.longitude),
@@ -107,7 +128,10 @@ async function fetchCarparksNetwork(): Promise<ParkingItem[]> {
         vacancy: vacancyInfo?.vacancy,
         lastUpdated: vacancyInfo?.lastupdate,
         rateSummary: formatCarparkRate(item.privateCar),
-        openingHours: formatOpeningHours(item.openingHours, item.opening_status),
+        openingHours: formatOpeningHours(
+          item.openingHours,
+          item.opening_status,
+        ),
       };
     });
 }
@@ -141,9 +165,9 @@ function formatOperatingPeriod(code?: string) {
   }
 
   const lookup: Record<string, string> = {
-    D: 'Daily',
-    '3D': 'Daily (special period)',
-    '3A': 'Extended period',
+    D: "Daily",
+    "3D": "Daily (special period)",
+    "3A": "Extended period",
   };
 
   return lookup[code] ?? code;
@@ -186,14 +210,14 @@ async function fetchMeteredNetwork(): Promise<ParkingItem[]> {
 
     const existing = groups.get(poleId);
     const occupancy = occupancyMap.get(parkingSpaceId);
-    const isVacant = occupancy?.status === 'V';
+    const isVacant = occupancy?.status === "V";
 
     if (!existing) {
       groups.set(poleId, {
         id: poleId,
-        name: `${row.Street || 'Metered Parking'} ${row.SectionOfStreet ? `(${row.SectionOfStreet})` : ''}`.trim(),
-        district: row.District || 'Unknown',
-        address: `${row.Street || ''} ${row.SectionOfStreet || ''}`.trim(),
+        name: `${row.Street || "Metered Parking"} ${row.SectionOfStreet ? `(${row.SectionOfStreet})` : ""}`.trim(),
+        district: row.District || "Unknown",
+        address: `${row.Street || ""} ${row.SectionOfStreet || ""}`.trim(),
         latitude: lat,
         longitude: lng,
         totalSpaces: 1,
@@ -211,17 +235,20 @@ async function fetchMeteredNetwork(): Promise<ParkingItem[]> {
       existing.vacantSpaces += 1;
     }
 
-    if (occupancy?.updated && (!existing.latestUpdate || occupancy.updated > existing.latestUpdate)) {
+    if (
+      occupancy?.updated &&
+      (!existing.latestUpdate || occupancy.updated > existing.latestUpdate)
+    ) {
       existing.latestUpdate = occupancy.updated;
     }
   }
 
   return Array.from(groups.values()).map((group) => ({
     id: `metered-${group.id}`,
-    source: 'metered' as const,
+    source: "metered" as const,
     name: group.name,
     district: group.district,
-    address: group.address || 'On-street metered spaces',
+    address: group.address || "On-street metered spaces",
     coordinates: {
       latitude: group.latitude,
       longitude: group.longitude,
@@ -236,8 +263,16 @@ async function fetchMeteredNetwork(): Promise<ParkingItem[]> {
 
 export async function fetchParkingBundle() {
   const [carparks, metered] = await Promise.all([
-    fetchWithCache('easyparking:cache:carparks-v1', CACHE_MAX_AGE_MS, fetchCarparksNetwork),
-    fetchWithCache('easyparking:cache:metered-v1', CACHE_MAX_AGE_MS, fetchMeteredNetwork),
+    fetchWithCache(
+      "easyparking:cache:carparks-v1",
+      CACHE_MAX_AGE_MS,
+      fetchCarparksNetwork,
+    ),
+    fetchWithCache(
+      "easyparking:cache:metered-v1",
+      CACHE_MAX_AGE_MS,
+      fetchMeteredNetwork,
+    ),
   ]);
 
   return {
