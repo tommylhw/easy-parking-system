@@ -3,12 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/src/components/EmptyState";
 import { FilterChips } from "@/src/components/FilterChips";

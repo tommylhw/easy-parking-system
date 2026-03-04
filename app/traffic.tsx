@@ -2,13 +2,13 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
 import {
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/src/components/EmptyState";
 import { LoadingState } from "@/src/components/LoadingState";
@@ -36,7 +36,7 @@ export default function TrafficScreen() {
       const traffic = await fetchTrafficIncidents();
       const tunnelInfo = await fetchTunnelInfo(traffic.data.alerts);
 
-      setIncidents(traffic.data.alerts);
+      setIncidents(traffic.data.all);
       setTunnels(tunnelInfo);
       setStale(traffic.stale);
       setError(null);

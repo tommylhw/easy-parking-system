@@ -1,12 +1,6 @@
 import { StatusBar } from "expo-status-bar";
-import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/src/components/EmptyState";
 import { GlassCard } from "@/src/components/GlassCard";
